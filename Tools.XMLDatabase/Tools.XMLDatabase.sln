@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.XMLDatabase", "Tools.XMLDatabase\Tools.XMLDatabase.csproj", "{36B39B67-57F8-44D1-9677-7D4070D8094C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.XMLDatabase.NUnitTests", "Tools.XMLDatabase.NUnitTests\Tools.XMLDatabase.NUnitTests.csproj", "{B9882FFE-DD75-43EE-B035-B204D50EF604}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{36B39B67-57F8-44D1-9677-7D4070D8094C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36B39B67-57F8-44D1-9677-7D4070D8094C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36B39B67-57F8-44D1-9677-7D4070D8094C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36B39B67-57F8-44D1-9677-7D4070D8094C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9882FFE-DD75-43EE-B035-B204D50EF604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9882FFE-DD75-43EE-B035-B204D50EF604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9882FFE-DD75-43EE-B035-B204D50EF604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9882FFE-DD75-43EE-B035-B204D50EF604}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9618022B-9A92-417B-BD8B-77C5C4D6CC5E}
+	EndGlobalSection
+EndGlobal
