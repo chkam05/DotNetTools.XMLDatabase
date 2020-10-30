@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XMLDatabase>
+	<XMLDatabaseVersion Major="{major}" Minor="{minor}" Release="{release}" Revision="{revision}" />
+</XMLDatabase>

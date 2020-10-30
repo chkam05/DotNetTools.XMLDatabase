@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XMLDatabase>
+	<XMLDatabaseVersion Major="2" Minor="0" Release="0" Revision="0" />
+	<MemberDataModel>
+		<MemberDataModel id="ae57ad7fe82c47e99e5a91fe817d19e1">
+			<FirstName type="String">Kamil</FirstName>
+			<SecondName type="String"></SecondName>
+			<Surname type="String">Karpinski</Surname>
+			<BirthDate type="Nullable`1">1994-12-05T00:00:00</BirthDate>
+			<Description type="String">Developer</Description>
+			<Balance type="Double">1234.56</Balance>
+			<EventDates type="List`1">
+				<index_0>df188954af5b4303b9ac71fd209caddb</index_0>
+			</EventDates>
+			<Files type="List`1">
+				<index_0>6db4ac068f3548a6bb6acb4fb8ba0925</index_0>
+			</Files>
+			<Id type="String">ae57ad7fe82c47e99e5a91fe817d19e1</Id>
+		</MemberDataModel>
+	</MemberDataModel>
+	<EventDataModel>
+		<EventDataModel id="df188954af5b4303b9ac71fd209caddb">
+			<Name type="String">Engagement</Name>
+			<Description type="String">Snowy winter evening</Description>
+			<Date type="Nullable`1">2016-01-23T19:00:00</Date>
+			<Id type="String">df188954af5b4303b9ac71fd209caddb</Id>
+		</EventDataModel>
+	</EventDataModel>
+	<FileDataModel>
+		<FileDataModel id="6db4ac068f3548a6bb6acb4fb8ba0925">
+			<Name type="String">DSC_0001.jpg</Name>
+			<Type type="String">JPEG/IMAGE</Type>
+			<Extension type="String">.jpg</Extension>
+			<Path type="String">C:\Users\Kamil\Pictures\</Path>
+			<Id type="String">6db4ac068f3548a6bb6acb4fb8ba0925</Id>
+		</FileDataModel>
+	</FileDataModel>
+</XMLDatabase>

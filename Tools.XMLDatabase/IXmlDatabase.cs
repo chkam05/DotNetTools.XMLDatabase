@@ -19,6 +19,13 @@ namespace Tools.XMLDatabase
         /// <returns> True - if data model instance was inserted corretly into database, False - otherwise. </returns>
         bool AddObject<TDataModel>(TDataModel dataModel) where TDataModel : DataModel;
 
+        /// <summary> Remove all type objects from XML Database. </summary>
+        void ClearDatabase();
+
+        /// <summary> Remove all objects from XML Database with specified data model type. </summary>
+        /// <typeparam name="TDataModel"> Type of data model. </typeparam>
+        void ClearObject<TDataModel>() where TDataModel : DataModel;
+
         /// <summary> Get object from XML Database. </summary>
         /// <typeparam name="TDataModel"> Type of data model. </typeparam>
         /// <param name="identifier"> DataModel instance identifier. </param>
@@ -77,6 +84,22 @@ namespace Tools.XMLDatabase
         void RegisterDataModel<TDataModel>() where TDataModel : DataModel;
 
         #endregion SETUP METHODS
+
+        #region VERSION MANAGEMENT
+
+        /// <summary> Get version of XML database file. </summary>
+        /// <returns> Version of XML database file. </returns>
+        XMLDatabaseVersion GetFileVersion();
+
+        /// <summary> Get max version of required XML database file. </summary>
+        /// <returns> Max required version of XML database file. </returns>
+        XMLDatabaseVersion GetCurrentVersion();
+
+        /// <summary> Get minimal version of required XML database file. </summary>
+        /// <returns> Minimal required version of XML database file. </returns>
+        XMLDatabaseVersion GetMinimalVersion();
+
+        #endregion VERSION MANAGEMENT
 
     }
 }

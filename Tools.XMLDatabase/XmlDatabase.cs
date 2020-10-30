@@ -34,10 +34,13 @@ namespace chkam05.DotNetTools.XMLDatabase
         public XmlDatabase(XmlDatabaseOptions options = null)
         {
             //  Create clean XML root data.
-            _root = new XElement("XMLDatabase");
+            _root = new XElement(XmlDatabaseStatics.XmlDatabaseRoot);
 
             //  Run setup method.
             Setup(options);
+
+            //  Setup XML database version.
+            VersionHandler.SetVersion(_root, _options.CurrentVersion?.AsDictionary());
         }
 
         /// <summary> XmlDatabase class from file constructor. </summary>
@@ -50,6 +53,13 @@ namespace chkam05.DotNetTools.XMLDatabase
 
             //  Run setup method.
             Setup(options);
+
+            //  Checkout XML database version.
+            var (correctVersion, versionError) = CheckoutVersion();
+
+            //  Raise exception if database version is not valid.
+            if (!correctVersion)
+                throw new IncorrectXmlVersionException(versionError);
         }
 
         #endregion CLASS METHODS
@@ -84,6 +94,42 @@ namespace chkam05.DotNetTools.XMLDatabase
             }
 
             return false;
+        }
+
+        /// <summary> Remove all type objects from XML Database. </summary>
+        public void ClearDatabase()
+        {
+            //  Create removed data iterator.
+            foreach (var node in _root.Elements())
+            {
+                //  Check if data model is not version data model then skip.
+                if (node.Name == typeof(XMLDatabaseVersion).Name)
+                    continue;
+
+                //  Remove child data model instances from this node.
+                node.Elements().Remove();
+            }
+        }
+
+        /// <summary> Remove all objects from XML Database with specified data model type. </summary>
+        /// <typeparam name="TDataModel"> Type of data model. </typeparam>
+        public void ClearObject<TDataModel>() where TDataModel : DataModel
+        {
+            //  Get type of data model.
+            Type type = typeof(TDataModel);
+
+            //  Check if data model is not version data model then skip.
+            if (type.Name == typeof(XMLDatabaseVersion).Name)
+                return;
+
+            //  Check if database contains this specific data model.
+            if (HasDataModel<TDataModel>())
+            {
+                //  Get target database node that contains particular type of objects.
+                var node = _root.Element(type.Name);
+
+                node.Elements().Remove();
+            }
         }
 
         /// <summary> Get object from XML Database. </summary>
@@ -323,6 +369,10 @@ namespace chkam05.DotNetTools.XMLDatabase
 
             //  Register type.
             _dataModels.Add(type);
+
+            //  Register type in root XElement.
+            if (!HasDataModel<TDataModel>())
+                _root.Add(new XElement(type.Name));
         }
 
         /// <summary> Setup XML database with options. </summary>
@@ -352,136 +402,222 @@ namespace chkam05.DotNetTools.XMLDatabase
                 throw new InvalidDataModelException(dataModelType);
 
             //  Get properties
-            var propertyInfos = dataModelType.GetProperties(XmlDatabaseStatics.PropertyTypes);
+            var properties = dataModelType.GetProperties(XmlDatabaseStatics.PropertyTypes);
 
             //  Validate properties of data model.
-            foreach (var propertyInfo in propertyInfos)
+            foreach (var propertyInfo in properties)
             {
                 //  Get type of single data model property.
                 var propertyType = propertyInfo.PropertyType;
 
                 //  Validate type of property.
-                ValidatePropertyType(propertyType);
+                var (isCorrect, innerType) = ValidatePropertyType(propertyType);
+
+                if (!isCorrect)
+                    throw new InvalidDataModelPropertyException(propertyType, innerType);
             }
         }
 
         /// <summary> Validate single property type of data model that will be registered. </summary>
         /// <param name="propertyType"> Type of property from data model. </param>
-        private void ValidatePropertyType(Type propertyType)
+        /// <returns> Tuple: (Is type correct, additional inner type). </returns>
+        private (bool, Type) ValidatePropertyType(Type propertyType)
         {
             //  Check if property type is enumerable type.
             if (propertyType.IsEnum)
-                return;
+                return (true, null);
 
             //  Check if property type is array type.
             else if (propertyType.IsArray)
             {
-                ValidateInnerPropertyType(propertyType, propertyType.GetElementType());
-                return;
+                return ValidateInnerPropertyType(propertyType, propertyType.GetElementType());
             }
 
             //  Check if property type is nullable type.
             else if (propertyType.IsGenericType && Nullable.GetUnderlyingType(propertyType) != null)
             {
-                ValidateInnerPropertyType(propertyType, Nullable.GetUnderlyingType(propertyType));
-                return;
+                return ValidateInnerPropertyType(propertyType, Nullable.GetUnderlyingType(propertyType));
             }
 
             //  Check if property type is dictionary type.
             else if (propertyType.IsGenericType && propertyType.GetInterfaces().Contains(typeof(IDictionary)))
             {
-                ValidateInnerKeyPropertyType(propertyType, propertyType.GetGenericArguments()[0]);
-                ValidateInnerPropertyType(propertyType, propertyType.GetGenericArguments()[1]);
-                return;
+                //  Check key dictionary property.
+                var (keyResult, keyInner) = ValidateInnerKeyPropertyType(propertyType, propertyType.GetGenericArguments()[0]);
+                if (!keyResult)
+                    return (keyResult, keyInner);
+
+                //  Check value dictionary property.
+                var (valueResult, valueInner) = ValidateInnerPropertyType(propertyType, propertyType.GetGenericArguments()[1]);
+                if (!valueResult)
+                    return (valueResult, valueInner);
+
+                //  Return a ok.
+                return (true, null);
             }
 
             //  Check if property type is ICollection/list type.
             else if (propertyType.IsGenericType && propertyType.GetInterfaces().Contains(typeof(ICollection)))
             {
-                ValidateInnerPropertyType(propertyType, propertyType.GetGenericArguments()[0]);
-                return;
+                return ValidateInnerPropertyType(propertyType, propertyType.GetGenericArguments()[0]);
             }
 
             //  Check if property type is string.
             else if (propertyType == typeof(string))
             {
-                return;
+                return (true, null);
             }
 
             //  Check if property type is another class type - throw InvalidDataModelProperty.
             else if (propertyType.IsClass)
             {
-                throw new InvalidDataModelPropertyException(propertyType);
+                return (false, null);
+            }
+
+            //  Other inside properties
+            else
+            {
+                return (true, null);
             }
         }
 
         /// <summary> Validate key property type of dictionary property of data model that will be registered. </summary>
         /// <param name="propertyType"> Type of dictionary property from data model. </param>
         /// <param name="KeyPropertyType"> Type of property inside enumerable or nullable property. </param>
-        private void ValidateInnerKeyPropertyType(Type propertyType, Type KeyPropertyType)
+        /// <returns> Tuple: (Is type correct, additional inner type). </returns>
+        private (bool, Type) ValidateInnerKeyPropertyType(Type propertyType, Type KeyPropertyType)
         {
             //  Check if inside key property type is nullable type - throw InvalidDataModelProperty.
             if (KeyPropertyType.IsGenericType && KeyPropertyType.GetInterfaces().Contains(typeof(INullable)))
             {
-                throw new InvalidDataModelPropertyException(propertyType, KeyPropertyType);
+                return (false, KeyPropertyType);
             }
 
-            //  Preform other checks.
+            //  Preform other checks on inside key property.
             else
             {
-                ValidateInnerPropertyType(propertyType, KeyPropertyType);
+                return ValidateInnerPropertyType(propertyType, KeyPropertyType);
             }
         }
 
         /// <summary> Validate property type of enumerable or nullable property of data model that will be registered. </summary>
         /// <param name="propertyType"> Type of enumerable or nullable property from data model. </param>
         /// <param name="innerPropertyType"> Type of property inside enumerable or nullable property. </param>
-        private void ValidateInnerPropertyType(Type propertyType, Type innerPropertyType)
+        /// <returns> Tuple: (Is type correct, additional inner type). </returns>
+        private (bool, Type) ValidateInnerPropertyType(Type propertyType, Type innerPropertyType)
         {
             //  Check if inside property type is enumerable type.
             if (innerPropertyType.IsEnum)
             {
-                return;
+                return (true, null);
             }
 
             //  Check if inside property type is array type - throw InvalidDataModelProperty.
             else if (innerPropertyType.IsArray)
             {
-                throw new InvalidDataModelPropertyException(propertyType, innerPropertyType);
+                return (false, innerPropertyType);
             }
 
             //  Check if inside property type is nullable type.
             else if (innerPropertyType.IsGenericType && innerPropertyType.GetInterfaces().Contains(typeof(INullable)))
             {
-                return;
+                return (true, null);
             }
 
             //  Check if inside property type is dictionary type - throw InvalidDataModelProperty.
             else if (innerPropertyType.IsGenericType && innerPropertyType.GetInterfaces().Contains(typeof(IDictionary)))
             {
-                throw new InvalidDataModelPropertyException(propertyType, innerPropertyType);
+                return (false, innerPropertyType);
             }
 
             //  Check if inside property type is ICollection/list type - throw InvalidDataModelProperty.
             else if (innerPropertyType.IsGenericType && innerPropertyType.GetInterfaces().Contains(typeof(ICollection)))
             {
-                throw new InvalidDataModelPropertyException(propertyType, innerPropertyType);
+                return (false, innerPropertyType);
             }
 
             //  Check if property type is string.
             else if (innerPropertyType == typeof(string))
             {
-                return;
+                return (true, null);
             }
 
             //  Check if inside property type is another class type - throw InvalidDataModelProperty.
             else if (innerPropertyType.IsClass)
             {
-                throw new InvalidDataModelPropertyException(propertyType, innerPropertyType);
+                return (false, innerPropertyType);
+            }
+
+            //  Other inside properties
+            else
+            {
+                return (true, null);
             }
         }
 
         #endregion TYPES VALIDATION METHODS
+
+        #region VERSION MANAGEMENT
+
+        /// <summary> Get version of XML database file. </summary>
+        /// <returns> Version of XML database file. </returns>
+        public XMLDatabaseVersion GetFileVersion()
+        {
+            //  Get version of database XML file.
+            var fileVersion = VersionHandler.GetFileVersion(_root);
+
+            //  Convert and return dabase XML file version as XMLDatabaseVersion.
+            return XMLDatabaseVersion.FromDictionary(fileVersion);
+        }
+
+        /// <summary> Get max version of required XML database file. </summary>
+        /// <returns> Max required version of XML database file. </returns>
+        public XMLDatabaseVersion GetCurrentVersion()
+        {
+            //  Get current version of database library.
+            var currentVersion = XmlDatabaseInfo.CurrentVersion;
+
+            //  According to custom options return converted current version
+            //  of database library or current version from options.
+            return _options.CurrentVersion != null
+                ? _options.CurrentVersion : XMLDatabaseVersion.FromDictionary(currentVersion);
+        }
+
+        /// <summary> Get minimal version of required XML database file. </summary>
+        /// <returns> Minimal required version of XML database file. </returns>
+        public XMLDatabaseVersion GetMinimalVersion()
+        {
+            //  Get current minimal version of database library.
+            var minimalVersion = XmlDatabaseInfo.MinimalVersion;
+
+            //  According to custom options return converted minimal version
+            //  of database required file or minimal version from options.
+            return _options.MinimalVersion != null
+                ? _options.MinimalVersion : XMLDatabaseVersion.FromDictionary(minimalVersion);
+        }
+
+        /// <summary> Perform version check on XML database file. </summary>
+        /// <returns> Tuple (If version is correct, version error informations). </returns>
+        private (bool, DatabaseVersionError) CheckoutVersion()
+        {
+            var checkoutResult = VersionHandler.CheckoutVersion(_root,
+                _options.CurrentVersion?.AsDictionary(),
+                _options.MinimalVersion?.AsDictionary());
+
+            switch (checkoutResult)
+            {
+                case DatabaseVersionError.NO_VERSION:
+                case DatabaseVersionError.VERSION_NEWER:
+                case DatabaseVersionError.VERSION_OLDER:
+                    return (false, checkoutResult);
+
+                case DatabaseVersionError.VERSION_CURRENT:
+                default:
+                    return (true, checkoutResult);
+            }
+        }
+
+        #endregion VERSION MANAGEMENT
 
     }
 }

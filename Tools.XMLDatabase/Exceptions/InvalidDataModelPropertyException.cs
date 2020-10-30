@@ -9,8 +9,8 @@ namespace Tools.XMLDatabase.Exceptions
 
         //  VARIABLES
 
-        private static readonly string _defaultMessage = "DataModel contains a property with an invalid{data_type} type.";
-        private static readonly string _containerMessage = "DataModel cannot contain a{data_type}property with{conjunction}{inside_data_type} type.";
+        private static readonly string _defaultMessage = "DataModel contains a property with an invalid {data_type}type.";
+        private static readonly string _containerMessage = "DataModel cannot contain a{data_type}property with {conjunction}{inside_data_type}type.";
 
         public Type PropertyType { get; private set; }
         public Type InnerPropertyType { get; private set; }
@@ -57,14 +57,14 @@ namespace Tools.XMLDatabase.Exceptions
             if (propertyType != null && innerPropertyType != null)
             {
                 return message
-                        .Replace("{data_type}", $" \"{propertyType.Name}\" ")
-                        .Replace("{conjunction}", propertyType.BaseType == innerPropertyType.BaseType ? " another" : "")
-                        .Replace("{inside_data_type}", $" \"{innerPropertyType.Name}\" ");
+                        .Replace("{data_type}", $"\"{propertyType.Name}\" ")
+                        .Replace("{conjunction}", propertyType.BaseType == innerPropertyType.BaseType ? "another " : "")
+                        .Replace("{inside_data_type}", $"\"{innerPropertyType.Name}\" ");
             }
             else if (propertyType != null)
-                return message.Replace("{data_type}", $" \"{propertyType.Name}\"");
+                return message.Replace("{data_type}", $"\"{propertyType.Name}\" ");
             else
-                return message.Replace("{data_type}", " ");
+                return message.Replace("{data_type}", "");
         }
 
         #endregion TOOL METHODS

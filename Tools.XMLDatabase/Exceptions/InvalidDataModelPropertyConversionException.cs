@@ -9,7 +9,7 @@ namespace Tools.XMLDatabase.Exceptions
 
         //  VARIABLES
 
-        private static readonly string _message = "Unable to convert and set{data_value}value with{field_type}type on{field_name}field in{data_type}data modle instance.";
+        private static readonly string _message = "Unable to convert and set{data_value}value with{field_type}type on{field_name}field in{data_type}data model instance.";
 
         public Type DataModelType { get; private set; }
         public Type PropertyType { get; private set; }
