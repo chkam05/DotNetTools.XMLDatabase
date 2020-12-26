@@ -10,6 +10,12 @@ Base library class worker, that allow to *Add to XML*, *Update in XML*, *Remove 
 * ***IXmlDatabase***  
 Interface from base library class worker, that allow to implement.
 
+## Updates:
+
+### 2.1.1
+* Above this version in database model, **virtual** variables will be **ignored** from saving into database and loading from it
+* Added database model, variables types formatting in database (*Available as option in database settings*)
+
 ## Usage Flow
 ![Flow Diagram Image](Docs/FlowDiagram.png)
 
@@ -51,6 +57,12 @@ Class that will be used as data model in XML database must be inherited from ***
 ```XMLDatabaseVersion.XMLDatabaseVersion()``` - Create new version instance.  
 ```XMLDatabaseVersion.FromDictionary(Dictionary<string, int> dictionaryVersion)``` - Create version instance from dictionary equivalent structure.  
 ```XMLDatabaseVersion.AsDictionary()``` - Convert version instance to dictionary equivalent structure.  
+
+# Options
+
+```CurrentVersion``` - Configuration for max required version of database file that can be opened.  
+```MinimalVersion``` - Configuration for minimal required version of database file that can be opened.  
+```TypesCoding``` - Type of variable type notation in database file. (Default SIMPLE) Available types are: SIMPLE, AS_STRING, FULL  
 
 # Examples
 
