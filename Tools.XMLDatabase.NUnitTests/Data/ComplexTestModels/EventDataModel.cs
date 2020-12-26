@@ -19,7 +19,7 @@ namespace Tools.XMLDatabase.NUnitTests.Data.ComplexTestModels
 
         /// <summary> Required constructor with XElement object for Data Model. </summary>
         /// <param name="xmlObject"> XML database object with data to insert inside class instance. </param>
-        public EventDataModel(XElement xmlObject) : base(xmlObject) { }
+        public EventDataModel(XElement xmlObject, XmlDatabaseOptions options = null) : base(xmlObject, options) { }
 
     }
 }

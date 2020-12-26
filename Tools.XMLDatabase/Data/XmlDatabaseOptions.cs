@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Tools.XMLDatabase.Statics;
 
 namespace Tools.XMLDatabase.Data
 {
@@ -11,6 +12,7 @@ namespace Tools.XMLDatabase.Data
 
         public XMLDatabaseVersion CurrentVersion = null;
         public XMLDatabaseVersion MinimalVersion = null;
+        public TypesCoding TypesCoding = TypesCoding.SIMPLE;
 
 
         //  METHODS

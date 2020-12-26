@@ -5,6 +5,7 @@ using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Xml.Linq;
 using Tools.XMLDatabase;
 using Tools.XMLDatabase.Data;
@@ -87,7 +88,7 @@ namespace chkam05.DotNetTools.XMLDatabase
                         item => item.Attribute(XmlDatabaseStatics.XmlAttributeIdentifier).Value == dataModel.Id))
                     {
                         //  Insert object into database.
-                        node.Add(dataModel.AsXml());
+                        node.Add(dataModel.AsXml(_options));
                         return true;
                     }
                 }
@@ -158,7 +159,7 @@ namespace chkam05.DotNetTools.XMLDatabase
                     //  If any object instances exists in database - return first.
                     if (items != null && items.Any())
                     {
-                        return (TDataModel)Activator.CreateInstance(type, new object[] { items.FirstOrDefault() });
+                        return (TDataModel)Activator.CreateInstance(type, new object[] { items.FirstOrDefault(), _options });
                     }
                 }
             }
@@ -184,7 +185,7 @@ namespace chkam05.DotNetTools.XMLDatabase
 
                 //  Get all objects with particular DataModel type from database.
                 var instances = from item in node.Elements()
-                                select (TDataModel)Activator.CreateInstance(type, new object[] { item });
+                                select (TDataModel)Activator.CreateInstance(type, new object[] { item, _options });
 
                 //  If any object instances exists in database - use filter and return.
                 if (instances != null && instances.Any())
@@ -328,7 +329,7 @@ namespace chkam05.DotNetTools.XMLDatabase
                     if (items != null && items.Any())
                     {
                         items.Remove();
-                        node.Add(dataModel.AsXml());
+                        node.Add(dataModel.AsXml(_options));
                         return true;
                     }
                 }
@@ -407,6 +408,10 @@ namespace chkam05.DotNetTools.XMLDatabase
             //  Validate properties of data model.
             foreach (var propertyInfo in properties)
             {
+                //  Ignore virtual properties.
+                if (propertyInfo.GetGetMethod().IsVirtual)
+                    continue;
+
                 //  Get type of single data model property.
                 var propertyType = propertyInfo.PropertyType;
 

@@ -26,8 +26,6 @@ namespace Tools.XMLDatabase.Converters
         {
             //  Setup XML data object.
             var xmlObject = new XElement(name);
-            var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, type.Name);
-            xmlObject.Add(typeAttribute);
 
             //  Seed XML array data.
             if (value != null)
@@ -96,8 +94,6 @@ namespace Tools.XMLDatabase.Converters
         {
             //  Setup XML data object.
             var xmlObject = new XElement(name);
-            var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, type.Name);
-            xmlObject.Add(typeAttribute);
 
             //  Seed XML dictionary data.
             if (value != null)
@@ -181,8 +177,6 @@ namespace Tools.XMLDatabase.Converters
 
             //  Setup XML data object.
             var xmlObject = new XElement(name, convertedValue);
-            var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, type.Name);
-            xmlObject.Add(typeAttribute);
 
             //  Return XML object.
             return xmlObject;
@@ -259,8 +253,6 @@ namespace Tools.XMLDatabase.Converters
         {
             //  Setup XML data object.
             var xmlObject = new XElement(name);
-            var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, type.Name);
-            xmlObject.Add(typeAttribute);
 
             //  Seed XML list data.
             if (value != null)
@@ -329,8 +321,6 @@ namespace Tools.XMLDatabase.Converters
 
             //  Setup XML data object.
             var xmlObject = new XElement(name, convertedValue);
-            var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, type.Name);
-            xmlObject.Add(typeAttribute);
 
             //  Return XML object.
             return xmlObject;
@@ -384,6 +374,26 @@ namespace Tools.XMLDatabase.Converters
         }
 
         #endregion NULLABLE XML CONVERTERS
+
+        #region TYPES NAME CONVERTER
+
+        public static string TypeToString(Type type, TypesCoding coding)
+        {
+            switch (coding)
+            {
+                case TypesCoding.AS_STRING:
+                    return type.ToString();
+
+                case TypesCoding.FULL:
+                    return type.FullName;
+
+                case TypesCoding.SIMPLE:
+                default:
+                    return type.Name;
+            }
+        }
+
+        #endregion TYPES NAME CONVERTER
 
     }
 }

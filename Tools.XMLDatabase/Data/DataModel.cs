@@ -35,9 +35,10 @@ namespace Tools.XMLDatabase.Data
 
         /// <summary> DataModel constructor from XML database object. </summary>
         /// <param name="xmlObject"> XML database object with data to insert inside class instance. </param>
-        protected DataModel(XElement xmlObject)
+        /// <param name="options"> Opcje bazy danych. </param>
+        protected DataModel(XElement xmlObject, XmlDatabaseOptions options = null)
         {
-            ConvertFromXml(xmlObject);
+            ConvertFromXml(xmlObject, options);
         }
 
         #endregion CLASS METHODS
@@ -45,8 +46,9 @@ namespace Tools.XMLDatabase.Data
         #region CONVERSION METHODS
 
         /// <summary> Create XML object instance with data from this object. </summary>
+        /// <param name="options"> Opcje bazy danych. </param>
         /// <returns> XML data element as XElement. </returns>
-        public XElement AsXml()
+        public XElement AsXml(XmlDatabaseOptions options = null)
         {
             //  Create empty XElement object instance with class name.
             var xmlObject = new XElement(this.GetType().Name);
@@ -60,14 +62,27 @@ namespace Tools.XMLDatabase.Data
 
             foreach (var propertyInfo in propertyInfos)
             {
+                //  Ignore virtual properties.
+                if (propertyInfo.GetGetMethod().IsVirtual)
+                    continue;
+
                 //  Get type of single data model property.
                 var propertyType = propertyInfo.PropertyType;
+
+                //  Get type name.
+                var propertyName = options != null
+                    ? CustomXmlConverter.TypeToString(propertyType, options.TypesCoding)
+                    : CustomXmlConverter.TypeToString(propertyType, TypesCoding.SIMPLE);
 
                 //  Perform an action on enum type.
                 if (propertyType.IsEnum)
                 {
                     var xmlVariable = CustomXmlConverter.EnumToXml(
                         propertyInfo.Name, propertyType, propertyInfo.GetValue(this));
+
+                    //  Add type.
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
+                    xmlVariable.Add(typeAttribute);
 
                     xmlObject.Add(xmlVariable);
                 }
@@ -78,6 +93,10 @@ namespace Tools.XMLDatabase.Data
                     var xmlVariable = CustomXmlConverter.ArrayToXml(
                         propertyInfo.Name, propertyType, propertyInfo.GetValue(this));
 
+                    //  Add type.
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
+                    xmlVariable.Add(typeAttribute);
+
                     xmlObject.Add(xmlVariable);
                 }
 
@@ -86,6 +105,10 @@ namespace Tools.XMLDatabase.Data
                 {
                     var xmlVariable = CustomXmlConverter.NullableToXml(
                         propertyInfo.Name, propertyType, propertyInfo.GetValue(this));
+
+                    //  Add type.
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
+                    xmlVariable.Add(typeAttribute);
 
                     xmlObject.Add(xmlVariable);
                 }
@@ -96,6 +119,10 @@ namespace Tools.XMLDatabase.Data
                     var xmlVariable = CustomXmlConverter.DictionaryToXml(
                         propertyInfo.Name, propertyType, propertyInfo.GetValue(this));
 
+                    //  Add type.
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
+                    xmlVariable.Add(typeAttribute);
+
                     xmlObject.Add(xmlVariable);
                 }
 
@@ -105,6 +132,10 @@ namespace Tools.XMLDatabase.Data
                     var xmlVariable = CustomXmlConverter.ListToXml(
                         propertyInfo.Name, propertyType, propertyInfo.GetValue(this));
 
+                    //  Add type.
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
+                    xmlVariable.Add(typeAttribute);
+
                     xmlObject.Add(xmlVariable);
                 }
 
@@ -113,7 +144,7 @@ namespace Tools.XMLDatabase.Data
                 {
                     //  Convert value and setup XML data object.
                     var xmlVariable = new XElement(propertyInfo.Name, propertyInfo.GetValue(this));
-                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyType.Name);
+                    var typeAttribute = new XAttribute(XmlDatabaseStatics.XmlAttributeType, propertyName);
 
                     //  Add XML value into current XML object representation.
                     xmlVariable.Add(typeAttribute);
@@ -126,8 +157,9 @@ namespace Tools.XMLDatabase.Data
         }
 
         /// <summary> Load data to this object from XML XElement object instance. </summary>
+        /// <param name="options"> Opcje bazy danych. </param>
         /// <param name="xmlObject"> XML data element instance as XElement </param>
-        private void ConvertFromXml(XElement xmlObject)
+        private void ConvertFromXml(XElement xmlObject, XmlDatabaseOptions options = null)
         {
             //  Get identifier of xml data object instance.
             Id = xmlObject.Attribute(XmlDatabaseStatics.XmlAttributeIdentifier).Value;
@@ -136,7 +168,7 @@ namespace Tools.XMLDatabase.Data
             var xmlElements = xmlObject.Elements();
 
             foreach (var element in xmlElements)
-                TrySetVariable(element);
+                TrySetVariable(element, options);
         }
 
         #endregion CONVERSION METHODS
@@ -144,8 +176,9 @@ namespace Tools.XMLDatabase.Data
         #region DATA MANAGEMENT METHODS
 
         /// <summary> Try set current class field/property/variable with data from XML object. </summary>
+        /// <param name="options"> Opcje bazy danych. </param>
         /// <param name="xmlObject"> XML object with single data to set. </param>
-        private void TrySetVariable(XElement xmlObject)
+        private void TrySetVariable(XElement xmlObject, XmlDatabaseOptions options = null)
         {
             //  Get property information from XML object.
             var propertyName = xmlObject.Name.ToString();
@@ -157,11 +190,19 @@ namespace Tools.XMLDatabase.Data
 
             if (propertyInfo != null)
             {
+                //  Ignore virtual properties.
+                if (propertyInfo.GetGetMethod().IsVirtual)
+                    return;
+
                 //  Get type of selected class property.
                 var propertyType = propertyInfo.PropertyType;
 
                 //  Validate current property type and property type from XML object.
-                if (propertyType.Name != propertyTypeName)
+                var currentTypeName = options != null
+                    ? CustomXmlConverter.TypeToString(propertyType, options.TypesCoding)
+                    : CustomXmlConverter.TypeToString(propertyType, TypesCoding.SIMPLE);
+
+                if (currentTypeName != propertyTypeName)
                     return;
 
                 //  Perform an action on enum type.
@@ -213,6 +254,11 @@ namespace Tools.XMLDatabase.Data
             }
         }
 
+        /// <summary> Try to convert and set property value from XML object into current data model class instance with error aviodance. </summary>
+        /// <param name="func"> Convert function </param>
+        /// <param name="property"> Property/field/variable. </param>
+        /// <param name="type"> Type of selected property/field/variable. </param>
+        /// <param name="xmlObject"> XML object with data to set. </param>
         private void TryInvokeConvertAndSetVariable(CustomConvertToObjectFunc func, PropertyInfo property, Type type, XElement xmlObject)
         {
             if (func != null)

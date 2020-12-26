@@ -62,9 +62,15 @@ namespace Tools.XMLDatabase.Exceptions
                         .Replace("{inside_data_type}", $"\"{innerPropertyType.Name}\" ");
             }
             else if (propertyType != null)
-                return message.Replace("{data_type}", $"\"{propertyType.Name}\" ");
+                return message
+                    .Replace("{data_type}", $"\"{propertyType.Name}\" ")
+                    .Replace("{conjunction}", "")
+                    .Replace("{inside_data_type}", "");
             else
-                return message.Replace("{data_type}", "");
+                return message
+                    .Replace("{data_type}", "")
+                    .Replace("{conjunction}", "")
+                    .Replace("{inside_data_type}", "");
         }
 
         #endregion TOOL METHODS

@@ -24,7 +24,7 @@ namespace Tools.XMLDatabase.NUnitTests.Data.ConversionTestModels
 
         /// <summary> Required constructor with XElement object for Data Model. </summary>
         /// <param name="xmlObject"> XML database object with data to insert inside class instance. </param>
-        public ConversionNullableDataModels(XElement xmlObject) : base(xmlObject) { }
+        public ConversionNullableDataModels(XElement xmlObject, XmlDatabaseOptions options = null) : base(xmlObject, options) { }
 
     }
 }
